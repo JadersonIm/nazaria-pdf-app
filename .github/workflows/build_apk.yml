@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          path: source
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -26,15 +28,25 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Create Flutter project
+        run: flutter create --project-name nazaria_pdf_app --org com.nazaria nazaria_pdf_app
+
+      - name: Copy source files
+        run: |
+          cp -r source/lib nazaria_pdf_app/
+          cp source/pubspec.yaml nazaria_pdf_app/pubspec.yaml
+
       - name: Install dependencies
+        working-directory: nazaria_pdf_app
         run: flutter pub get
 
       - name: Build APK
+        working-directory: nazaria_pdf_app
         run: flutter build apk --release --split-per-abi --dart-define=DATABRICKS_TOKEN=${{ secrets.DATABRICKS_TOKEN }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: nazaria-pdf-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          path: nazaria_pdf_app/build/app/outputs/flutter-apk/*.apk
           retention-days: 30
